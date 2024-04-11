@@ -1,0 +1,19 @@
+body    {
+    background-color: rgb(226, 241, 237);
+    font-family: "Archivo", sans-serif;
+    font-weight: 400;
+}
+
+header {
+    background-color: rgb(120, 222, 200);
+}
+#logo {
+    max-width: 10%;
+    display: inline-block;
+}
+
+/*links müssen Diese Farben haben (USB Vorgabe)*/
+a {
+    text-decoration: none;
+    color: #9B233C !important;
+}
