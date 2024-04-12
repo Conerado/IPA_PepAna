@@ -17,3 +17,106 @@ a {
     text-decoration: none;
     color: #9B233C !important;
 }
+
+.navbar li {
+    padding: 10px;
+    margin: 10px;
+    color: white;
+
+}
+
+
+table, th{
+    color: rgb(226, 241, 237);
+}
+
+th {
+    background-color: rgb(10, 96, 91) !important;
+    color: white !important
+}
+
+.card {
+    background-color: rgb(10, 96, 91) !important;
+    color: white !important
+
+}
+img {
+    background-color: transparent;
+}
+table {
+    padding: 5px;
+    margin: 5px;
+    border-style: solid;
+}
+#tbl-flex {
+    display: flex;
+    justify-content: space-between; /* This will add space between the child elements */
+    flex-wrap: wrap; /* This will allow the child elements to wrap onto the next line if there isn't enough space */
+}
+
+#Tagesinformation {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+/*table, th, td {*/
+/*    border: 1px solid;*/
+/*}*/
+#tbl-flex {
+    display: flex;
+    grid-template-columns: auto auto auto auto;
+    align-items: flex-start;
+}
+
+caption {
+    display: table-caption;
+    text-align: center;
+}
+
+textarea {
+    margin: 10px;
+}
+
+
+.CustomHover {
+    width: 400px;
+    height: 50px;
+    padding: 0;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.CustomHover * {
+    transition: 0.3s ease all;
+}
+
+
+
+.CustomHover h3 {
+    margin: 0;
+    padding: 2px 12px 48px;
+    line-height: 10px;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.CustomHover .focus-content {
+    display: block;
+    padding: 8px 12px;
+}
+
+.CustomHover p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.CustomHover:hover img, .CustomHover:focus-within img {
+    margin-top: -80px;
+}
+
+.CustomHover:hover h3, .CustomHover:focus-within h3 {
+    padding: 8px 12px 0;
+}
