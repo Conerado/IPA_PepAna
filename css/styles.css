@@ -12,11 +12,7 @@ header {
     display: inline-block;
 }
 
-/*links müssen Diese Farben haben (USB Vorgabe)*/
-a {
-    text-decoration: none;
-    color: #9B233C !important;
-}
+
 
 .navbar li {
     padding: 10px;
@@ -78,6 +74,10 @@ textarea {
     margin: 10px;
 }
 
+
+
+
+/*Hover Function*/
 
 .CustomHover {
     width: 400px;

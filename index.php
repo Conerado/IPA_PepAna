@@ -1,14 +1,42 @@
 <?php
+session_start();
 global $mySqlConn;
 
 // Include the database configuration file
 require_once "config/dbConfig.php";
 
 
+// Set default permission level and start session
+$permission = 3;
+
+$loggedIn = false;
+$information = "";
+
 // Store the selected date in a session variable if submitted
 if (isset($_POST['date'])) {
 // Store the selected date in a session variable
     $_SESSION['selected_date'] = $_POST['date'];
+}
+// Check if user is logged in
+if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
+    $loggedIn = true;
+
+
+// Check user's permission level
+}   if(isset($_SESSION["permissionLevel"]) > 0) {
+    $permission = $_SESSION["permissionLevel"];
+}
+else {
+    $loggedIn = false;
+    $_SESSION["loggedin"] = false;
+}
+
+
+
+// Disable textarea if user's permission level is not 1 or 2
+$writing = "disabled";
+if ($permission <= 2) {
+    $writing = "";
 }
 
 //get date from form or use current date
@@ -53,15 +81,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                     <img src="assets/USB_Logo.png" id="logo" alt="USB Logo">
                 </a>
             </li>
-            <li>
-                <a class="nav-link" href="">Konfiguration</a>
-            </li>
-            <li>
-                <a class="nav-link" href="">Benutzerverwaltung</a>
-            </li>
-            <li>
-                <a class="nav-link" href="">Login</a>
-            </li>
+            <?php
+            if($loggedIn && $permission == 1) {
+                echo "<li class='nav-item'>
+                <a class='nav-link active' href='config/configurationView.php'>Konfiguration</a>
+            </li>";
+            }
+
+            if($loggedIn && $permission == 1) {
+                echo "<li class='nav-item'>
+                <a class='nav-link active' href='php/User/benutzerVerwaltung.php'>Benutzerverwaltung</a>
+            </li>";
+            }
+            if($loggedIn) {
+                echo "<li class='nav-item'>
+                <a class='nav-link active' href='php/User/logout.php'>Logout</a>
+            </li>";
+            }
+            if (!$loggedIn) {
+                echo "<li class='nav-item'>
+                <a class='nav-link active'  tabindex='-1' aria-disabled='true' href='php/User/Login.php'>Login</a>
+            </li>";
+            }
+            ?>
+            <span class="navbar-text">
+                <?php
+                if(isset($_SESSION['username']))
+                {
+                    echo "Hallo ".$_SESSION['username'];
+                }
+                ?>
+            </span>
 
         </ul>
     </nav>
@@ -73,10 +123,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <div class="container card mb-3">
         <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
             <label for="Tagesinformation" class="form-label">Tagesinformation </label>
-            <textarea disabled  name="Tagesinformation" id="Tagesinformation" rows="5" cols="50" class="form-control">
+            <textarea <?php echo $writing ?>  name="Tagesinformation" id="Tagesinformation" rows="5" cols="50" class="form-control">
     <?php
 
-//return Daily information from MySQL Database
+//return Daily Information from mysql Database
     $cSQL = "SELECT * FROM dailyInformation WHERE date = '".$datum."'";
     if (isset($mySqlConn)) {
         $rs=$mySqlConn->query($cSQL);
@@ -89,11 +139,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
         echo "Keine Tagesinformationen vorhanden";
     }
     ?>
-
-            </textarea>
+</textarea>
+            <?php
+            // Display save button if user has writing permission
+            if ($writing !== "disabled") {
+                echo "<button type=\"submit\" name=\"submit\" class=\"btn btn-primary\">Speichern</button>";
+                if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+                    // Set a session variable to indicate success
+                    $_SESSION['success'] = true;
+                }
+            }
+            ?>
         </form>
-    </div>
 
+        <?php
+        // Check if the success session variable is set
+        if (isset($_SESSION['success'])) {
+            // Display the success message
+            echo '<div class="alert alert-success" role="alert">Der Eintrag wurde gespeichert!</div>';
+            // Unset the session variable
+            unset($_SESSION['success']);
+        }
+        ?>
+        </form>
+
+
+    </div>
+    <div class="d-flex flex-row-reverse">
+        <div class="p2">
+            <table class="container float-right">
+                <tr>
+                    <td><img src="assets/L.png" alt="Nur Vormittag" width="50" height="50"></td>
+                    <td style="color: black">Nur Vormittag</td>
+                </tr>
+                <tr>
+                    <td><img src="assets/R.png" alt="Nur Nachmittag" width="50" height="50"></td>
+                    <td style="color: black">Nur Nachmittag</td>
+                </tr>
+            </table>
+        </div>
+    </div>
 
 <h2>Übersicht</h2>
 <!-- Date Selector -->
@@ -210,9 +295,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <thead class='thead-dark'>";
             echo "<tr><th scope='col'>Zeit</th><th scope='col'>Name</th><th scope='col'>Station/Dienst</th>
 ";
-
-
-
+//check if user is loggedIn, then display Overtime
+            if ($_SESSION["loggedin"] && $permission < 3) {
+                echo "<th>Überstunden</th>";
+            }
 // Fetch the results
             while ($row = oci_fetch_array($stmt, OCI_ASSOC+OCI_RETURN_NULLS)) {
 
@@ -226,7 +312,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo "HNO";
                         break;
                     case "C = Ebene 01":
-//Had to take string apart, since the full string wasn't recognized. Might be due to the underscore (ChirAllgThrx_aa)
                     case (strpos($row['TITEL'], "ChirAllg") !== false);
                         echo "OP-Ost 01";
                         break;
@@ -258,7 +343,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo $row['TITEL'];
                 }
                 echo "</td>";
-
+            if ($_SESSION["loggedin"] && $permission < 3) {
 //Overtime calculation - TODO: restrict Access to only certain users
                 echo "<td class='text-end'>";
 // Calculate the hours and minutes (Value returned from function is in seconds)
@@ -274,6 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                     echo "<p style='color: red'>" . $result;
                 }
                 echo "</td>";
+            }
 
 
                 echo "</tr>";
@@ -287,32 +373,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
         } else {
             $e = oci_error($stmt);
         }
-
 // Table: Dienste
 // Get Full Name, Kürzel, Telephonenumbers, Pager, Dienstposition, PA_CODE, Knoten_ID, Overtime from Oracle DB
 // Sort by Dienstposition and PA_CODE
 // Get from predefined Date
         $datum = isset($_POST['date']) ? date('Y-m-d', strtotime($_POST['date'])) : date('Y-m-d');
-        $sql = "SELECT DISTINCT MA.NACHNAME, MA.VORNAME, MA.KUERZEL, D.TITEL, MA.TEL_INTERN, MA.TEL_PRIVAT, MA.TEL_SONST,
-                MA.PAGER, PL.DIENSTPOSITION, D.PA_CODE, PL.KNOTEN_ID,
-                FnGLAZSaldo(MA.ID, TO_DATE(:datum, 'YYYY-MM-DD')) AS SALDO
+        $sql = "SELECT DISTINCT MA.NACHNAME, MA.VORNAME, MA.KUERZEL, D.TITEL, MA.TEL_INTERN, MA.TEL_PRIVAT, MA.TEL_SONST, MA.PAGER, PL.DIENSTPOSITION, D.PA_CODE, PL.KNOTEN_ID, FnGLAZSaldo(MA.ID, TO_DATE(:datum, 'YYYY-MM-DD')) AS SALDO
 		FROM ECBERN.DIENST D, ECBERN.PLANUNG PL, ECBERN.MITARBEITER MA
-		WHERE (MA.ID = PL.MITARBEITER_ID) AND  D.PA_CODE = PL.PA_CODE AND PL.KNOTEN_ID in (1527,28303)
-		  AND (PL.DATUM = TO_DATE(:datum, 'YYYY-MM-DD')) AND D.PA_CODE IN (516,5505,507,5563,508,5502,571,279,514,5496,
-		                                                                   570,3301,3302,855,858,7047,1028,513,5492,527,
-		                                                                   5561,520,5503,1057,5504,2302,5562,506, 7048,888,
-		                                                                   5541,5537,5538,5540,5543,3058,5489, 3059,5508, 803, 1340) 
-		  AND D.TITEL<>'HR' 
-		ORDER BY decode (D.PA_CODE, 570,1, 5538,1.5, 3058,1.6, 5489, 1.8, 855,2, 5540,2.5, 520,3,5503,3.2, 3059,3.5,5508,3.6, 
-		1028,4, 5543,4.5, 527,5,5561,5.1, 3301,6, 858,7, 7047,7.5, 571,8, 5541,8.5, 507,9,5563,9.1, 7048,10, 516,11, 
-		5505,11.5, 1057,12, 5504,12.5, 508,13, 5502,13.5, 514,14,5496,14.5, 513,15, 5492,15.1), PL.KNOTEN_ID";
+		WHERE (MA.ID = PL.MITARBEITER_ID) AND  D.PA_CODE = PL.PA_CODE AND PL.KNOTEN_ID in (1527,28303) AND (PL.DATUM = TO_DATE(:datum, 'YYYY-MM-DD')) AND D.PA_CODE IN (516,5505,507,5563,508,5502,571,279,514,5496,570,3301,3302,855,858,7047,1028,513,5492,527,5561,520,5503,1057,5504,2302,5562,506, 7048,888,5541,5537,5538,5540,5543,3058,5489, 3059,5508, 803, 1340) AND D.TITEL<>'HR' 
+		ORDER BY decode (D.PA_CODE, 570,1, 5538,1.5, 3058,1.6, 5489, 1.8, 855,2, 5540,2.5, 520,3,5503,3.2, 3059,3.5,5508,3.6, 1028,4, 5543,4.5, 527,5,5561,5.1, 3301,6, 858,7, 7047,7.5, 571,8, 5541,8.5, 507,9,5563,9.1, 7048,10, 516,11, 5505,11.5, 1057,12, 5504,12.5, 508,13, 5502,13.5, 514,14,5496,14.5, 513,15, 5492,15.1), PL.KNOTEN_ID";
 
-        if (isset($oracleConn)) {
-            $stmt = oci_parse($oracleConn, $sql);
+        if (isset($conn)) {
+            $stmt = oci_parse($conn, $sql);
         }
         oci_bind_by_name($stmt, ':datum', $datum);
 
-// Execute the query
+        // Execute the query
         if (oci_execute($stmt)) {
             echo "
 <div id='tbl-flex'>
@@ -323,13 +399,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <thead class='thead-dark'>";
             echo "<tr><th scope='col'>Zeit</th><th scope='col'>Name</th><th scope='col'>Station/Dienst</th>
 ";
+//check if user is loggedIn, then display Overtime
+            if ($_SESSION["loggedin"] && $permission < 3) {
+                echo "<th>Überstunden</th>";
+            }
             "
 </tr>";
 
 // Fetch the results
             while ($row = oci_fetch_array($stmt, OCI_ASSOC+OCI_RETURN_NULLS)) {
-// emphasize OA
-                if (strpos($row["TITEL"], "OA") !== false){
+                if (strpos($row["TITEL"], "OA") !== false || strpos($row["TITEL"], "PN 22:00-07:00") !== false){
                     echo "<tr class='table-secondary OA' >";
                 } else {
                     echo "<tr class='text-end'>";
@@ -434,7 +513,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo "Pn_OA";
                         break;
                     case "H2 07.00 - 07.00":
-                    case "H2Pras_u_Pikett":
+                    case "H2Pras_u_Pikett":         //sometimes H2 shows up twice, try to correct
                         echo "H2";
                         break;
                     case "WE_Nachtdienst_OA":
@@ -467,19 +546,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                 }
                 echo "</td>";
 
-                echo "<td class='text-end'>";
-                $hours = floor((float)($row['SALDO'] / 60 / 60));
-                $minutes = (int)($row['SALDO'] / 60) % 60;
-                $minutes = abs($minutes);
-                $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT); // Pad the minutes with leading zeros
-                $result = $hours . ":" . $minutes . " ";
-                if ($row['SALDO'] > 0) {
-                    echo "<p style='color: green'>" . $result;
-                } else {
-                    echo "<p style='color: red'>" . $result;
-                }
-                echo "</td>";
+                if ($_SESSION["loggedin"] && $permission < 3) {
 
+                    echo "<td class='text-end'>";
+                    $hours = floor((float)($row['SALDO'] / 60 / 60));
+                    $minutes = (int)($row['SALDO'] / 60) % 60;
+                    $minutes = abs($minutes);
+                    $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT); // Pad the minutes with leading zeros
+                    $result = $hours . ":" . $minutes . " ";
+                    if ($row['SALDO'] > 0) {
+                        echo "<p style='color: green'>" . $result;
+                    } else {
+                        echo "<p style='color: red'>" . $result;
+                    }
+                    echo "</td>";
+                }
                 echo "</tr>";
             }
             echo "</table>
@@ -493,15 +574,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
 // Get Full Name, Kürzel, Telephonenumbers, Pager, Dienstposition, PA_CODE, Knoten_ID, Overtime from Oracle DB
 // Sort by Dienstposition and PA_CODE
 // Get from predefined Date
-        $sql = "SELECT MA.NACHNAME, MA.VORNAME, MA.KUERZEL, D.TITEL, MA.TEL_INTERN, MA.TEL_PRIVAT, MA.TEL_SONST,
-       MA.PAGER, PL.DIENSTPOSITION, D.PA_CODE, PL.KNOTEN_ID, FnGLAZSaldo(MA.ID, TO_DATE(:datum, 'YYYY-MM-DD')) AS SALDO
+        $sql = "SELECT MA.NACHNAME, MA.VORNAME, MA.KUERZEL, D.TITEL, MA.TEL_INTERN, MA.TEL_PRIVAT, MA.TEL_SONST, MA.PAGER, PL.DIENSTPOSITION, D.PA_CODE, PL.KNOTEN_ID, FnGLAZSaldo(MA.ID, TO_DATE(:datum, 'YYYY-MM-DD')) AS SALDO
         FROM ECBERN.DIENST D, ECBERN.PLANUNG PL, ECBERN.MITARBEITER MA
-        WHERE (MA.ID = PL.MITARBEITER_ID) AND D.PA_CODE = PL.PA_CODE AND PL.KNOTEN_ID in (1527,28303) 
-          AND (PL.DATUM = TO_DATE(:datum, 'YYYY-MM-DD')) AND  D.PA_CODE IN (856,567,505,283,5491,992,2608,5560,5548,5547)
+        WHERE (MA.ID = PL.MITARBEITER_ID) AND D.PA_CODE = PL.PA_CODE AND PL.KNOTEN_ID in (1527,28303) AND (PL.DATUM = TO_DATE(:datum, 'YYYY-MM-DD')) AND  D.PA_CODE IN (856,567,505,283,5491,992,2608,5560,5548,5547)
         ORDER BY decode (D.PA_CODE, 992,1, 5547,1.5, 2428,2, 283,3, 5491, 3.1, 5548,3.2),PL.KNOTEN_ID";
 
-        if (isset($oracleConn)) {
-            $stmt = oci_parse($oracleConn, $sql);
+        if (isset($conn)) {
+            $stmt = oci_parse($conn, $sql);
         }
         oci_bind_by_name($stmt, ':datum', $datum);
 
@@ -516,7 +595,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <thead class='thead-dark'>";
             echo "<tr><th scope='col'>Zeit</th><th scope='col'>Name</th><th scope='col'>Station/Dienst</th>";
 
-
+//check if user is logged in, then display Overtime
+            if ($_SESSION["loggedin"] && $permission < 3) {
+                echo "<th>Überstunden</th>";
+            }
 // Fetch the results
             while ($row = oci_fetch_array($stmt, OCI_ASSOC + OCI_RETURN_NULLS)) {
 
@@ -540,19 +622,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo $row['TITEL'];
                 }
                 echo "</td>";
+                //check if user is loggedIn, then display Overtime
+                if ($_SESSION["loggedin"] && $permission < 3) {
 
-                echo "<td class='text-end'>";
-                $hours = floor((float)($row['SALDO'] / 60 / 60));
-                $minutes = (int)($row['SALDO'] / 60) % 60;
-                $minutes = abs($minutes);
-                $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT); // Pad the minutes with leading zeros
-                $result = $hours . ":" . $minutes . " ";
-                if ($row['SALDO'] > 0) {
-                    echo "<p style='color: green'>" . $result;
-                } else {
-                    echo "<p style='color: red'>" . $result;
+                    echo "<td class='text-end'>";
+                    $hours = floor((float)($row['SALDO'] / 60 / 60));
+                    $minutes = (int)($row['SALDO'] / 60) % 60;
+                    $minutes = abs($minutes);
+                    $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT); // Pad the minutes with leading zeros
+                    $result = $hours . ":" . $minutes . " ";
+                    if ($row['SALDO'] > 0) {
+                        echo "<p style='color: green'>" . $result;
+                    } else {
+                        echo "<p style='color: red'>" . $result;
+                    }
+                    echo "</td>";
                 }
-                echo "</td>";
                 echo "</tr>";
             }
             echo "</table>
@@ -571,6 +656,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
 </div>
 </body>
 </html>
+
 
 
 
