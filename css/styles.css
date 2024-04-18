@@ -26,6 +26,7 @@ table, th{
     color: rgb(226, 241, 237);
 }
 
+
 th {
     background-color: rgb(10, 96, 91) !important;
     color: white !important
@@ -74,7 +75,9 @@ textarea {
     margin: 10px;
 }
 
-
+.dienst-caption {
+    color: white;
+}
 
 
 /*Hover Function*/
