@@ -7,47 +7,25 @@ global $mySqlConn;
 
 //Connect to dbConfig.php
 require_once "../../config/dbConfig.php";
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-// Prepare the SQL statement
+    // Prepare the SQL statement
     $stmt = $mySqlConn->prepare("SELECT password, permissionLevel FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
 
-// Execute the statement
+    // Execute the statement
     $stmt->execute();
 
-// Get the result
+    // Get the result
     $result = $stmt->get_result();
 
     if ($result->num_rows == 1) {
         $row = $result->fetch_assoc();
         $hashed_password = $row["password"];
 
-// Verify the password
-        if ($hashed_password && password_verify($password, $hashed_password)) {
-            echo "Login successful";
-
-            $_SESSION['username'] = $username;
-            $_SESSION['permissionLevel'] = $row['permissionLevel'];
-            $_SESSION['loggedin'] = true;
-
-// Redirect to a logged-in page or perform other actions
-            header("Location: ../../index.php");
-            exit;
-        } else {
-            echo "Incorrect username or password";
-        }
-    } else {
-        echo "Incorrect username or password";
-    }
-    if ($result->num_rows == 1) {
-        $row = $result->fetch_assoc();
-        $hashed_password = $row["password"];
-
-// Verify the password
+        // Verify the password
         if (password_verify($password, $hashed_password)) {
             echo "Login successful";
 
@@ -58,10 +36,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Redirect to a logged-in page or perform other actions
             header("Location: ../../index.php");
             exit;
-        } } else {
+        } else {
+            $_SESSION['error_message'] = "Incorrect username or password";
+        }
+    } else {
         $_SESSION['error_message'] = "Incorrect username or password";
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -1,101 +1,41 @@
 <?php
-global $oracleConn;
-session_start();
 require_once "dbConfig.php";
-$loggedIn = false;
-$permission = 3;
+session_start();
+
+$loggedIn = isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true;
+$permission = isset($_SESSION["permissionLevel"]) && $_SESSION["permissionLevel"] > 0 ? $_SESSION["permissionLevel"] : 3;
 
 if ($_SESSION['permissionLevel'] != 1) {
     header("Location: ../php/User/login.php");
     exit;
 }
-if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
-    $loggedIn = true;
 
+// Handle form submissions for sortierung and Dienste
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['sortierung1']) && !empty(trim($_POST['sortierung1']))) {
+        file_put_contents("sortierung1.txt", $_POST['sortierung1']);
+    }
 
-// Check user's permission level
-}   if(isset($_SESSION["permissionLevel"]) > 0) {
-    $permission = $_SESSION["permissionLevel"];
-}
-else {
-    $loggedIn = false;
-    $_SESSION["loggedin"] = false;
-}
+    if (isset($_POST['sortierung2']) && !empty(trim($_POST['sortierung2']))) {
+        file_put_contents("sortierung2.txt", $_POST['sortierung2']);
+    }
 
-//Sortierung 1
-$file1 = "sortierung1.txt";
-global $sortierung1;
+    if (isset($_POST['sortierung3']) && !empty(trim($_POST['sortierung3']))) {
+        file_put_contents("sortierung3.txt", $_POST['sortierung3']);
+    }
 
-// Check if form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['sortierung1']) && !empty(trim($_POST['sortierung1']))) {
-    // Get the user input
-    $newSortierung1 = $_POST['sortierung1'];
-
-    if (file_put_contents($file1, $newSortierung1) !== false) {
-        echo "<p>Sortierung geändert.</p>";
+    if (isset($_POST['Dienste'])) {
+        $newDienste = ", " . $_POST['Dienste'];
+        $file = isset($_POST['Dienste1']) ? "Dienste1.txt" : (isset($_POST['Dienste2']) ? "Dienste2.txt" : "Dienste3.txt");
+        file_put_contents($file, $newDienste, FILE_APPEND);
     }
 }
-
 
 // Read content of Sortierung.txt
-    $sortierung1 = file_get_contents($file1);
+$sortierung1 = file_get_contents("sortierung1.txt");
+$sortierung2 = file_get_contents("sortierung2.txt");
+$sortierung3 = file_get_contents("sortierung3.txt");
 
-//Sortierung 2
-    $file2 = "sortierung2.txt";
-    global $sortierung2;
-
-// Check if form is submitted
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['sortierung2']) && !empty(trim($_POST['sortierung2']))) {
-// Get the user input
-        $newSortierung2 = $_POST['sortierung2'];
-
-// Write to the file
-        file_put_contents($file2, $newSortierung2);
-
-// Display success message
-        echo "<p>Sortierung geändert.</p>";
-        echo var_dump($_POST['sortierung2']);
-    }
-
-// Read content of Sortierung.txt
-    $sortierung2 = file_get_contents($file2);
-
-//Sortierung 3
-    $file3 = "sortierung3.txt";
-    global $sortierung3;
-
-// Check if form is submitted
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['sortierung3']) && !empty($_POST['sortierung3'])) {
-// Get the user input
-        $newSortierung3 = $_POST['sortierung3'];
-
-// Write to the file
-        file_put_contents($file3, $newSortierung3);
-
-// Display success message
-        echo "<p>Sortierung geändert.</p>";
-    }
-
-// Read content of Sortierung.txt
-    $sortierung3 = file_get_contents($file3);
-
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Dienste'])) {
-    // Get the user input
-    $newDienste = ", " . $_POST['Dienste'];
-
-    $file = "";
-    if (isset($_POST['Dienste1'])) {
-        $file = "Dienste1.txt";
-    } elseif (isset($_POST['Dienste2'])) {
-        $file = "Dienste2.txt";
-    } elseif (isset($_POST['Dienste3'])) {
-        $file = "Dienste3.txt";
-    }
-
-    if (file_put_contents($file, $newDienste, FILE_APPEND) !== false) {
-        echo "<p>Dienst hinzugefügt.</p>";
-    }
-}
 ?>
 
 

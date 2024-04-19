@@ -84,7 +84,7 @@ if ($_SESSION['permissionLevel'] != 1) {
             <?php
             if($loggedIn && $permission == 1) {
                 echo "<li class='nav-item'>
-                <a class='nav-link active' href='../../config/configurationView.php'>Konfiguration</a>
+                <a class='nav-link active' href='../../config/dienstVerwaltung.php'>Konfiguration</a>
             </li>";
             }
 
@@ -119,7 +119,7 @@ if ($_SESSION['permissionLevel'] != 1) {
                     <h2 class="card-title">Benutzerverwaltung</h2>
                     <?php
                     // Display all users
-//Display permission levels as Role names
+                    //Display permission levels as Role names
                     $roles = array(1 => 'Admin', 2 => 'Tageseinteilung', 3 => 'Keine Rechte');
 
                     $sql = "SELECT id, username, permissionLevel FROM users ORDER BY permissionLevel ASC, username ASC";
