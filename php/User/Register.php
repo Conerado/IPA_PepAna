@@ -31,7 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
 // Hashing the password
-
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
 // Prepare the SQL statement

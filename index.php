@@ -24,7 +24,6 @@ $information = "";
 
 // Store the selected date in a session variable if submitted
 if (isset($_POST['date'])) {
-// Store the selected date in a session variable
     $_SESSION['selected_date'] = $_POST['date'];
 }
 // Check if user is logged in
@@ -41,15 +40,13 @@ else {
     $_SESSION["loggedin"] = false;
 }
 
-
-
 // Disable textarea if user's permission level is not 1 or 2
 $writing = "disabled";
 if ($permission <= 2) {
     $writing = "";
 }
 
-//get date form form or use current date
+//get date from form or use current date
 $datum = $_SESSION['selected_date'] ?? date('Y-m-d', strtotime('+1 day'));
 
 // Get information from form and insert into database if submitted
@@ -126,7 +123,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
         </ul>
     </nav>
 </header>
-<!--   Main Content   -->
 
 <div class="container-fluid">
     <div class="container card mb-3">
@@ -252,7 +248,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
 //                $contactInfo .= " |P " . $row['PAGER'];
 //            }
 
-// Blurring Phone number for privacy -> Remove before PROD (use code above)
+            // Blurring Phone number for privacy -> Remove before PROD (use code above)
             if (!$row["TEL_INTERN"] == null) {
                 $blurredNumber = substr($row['TEL_INTERN'], 0, 5) . str_repeat('*', strlen($row['TEL_INTERN']) - 5);
                 $contactInfo .= " |I " . $blurredNumber;
@@ -300,14 +296,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <thead class='thead-dark'>";
             echo "<tr><th scope='col'>Zeit</th><th scope='col'>Name</th><th scope='col'>Station/Dienst</th>
 ";
-//check if user is loggedIn, then display Overtime
+            //check if user is loggedIn, then display Overtime
             if ($_SESSION["loggedin"] && $permission < 3) {
                 echo "<th>Überstunden</th>";
             }
-// Fetch the results
+            // Fetch the results
             while ($row = oci_fetch_array($stmt, OCI_ASSOC+OCI_RETURN_NULLS)) {
 
-// Convert PEP-title to predefined names
+                // Convert PEP-title to predefined names
                 $contactInfo = getStr($row);
                 switch ($row['TITEL']) {
                     case "Tagdienst_Koord":
@@ -317,7 +313,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo "HNO";
                         break;
                     case "C = Ebene 01":
-//Had to take string apart, since the full string wasn't recognized. Might be due to the underscore (ChirAllgThrx_aa)
+                    //Had to take string apart, since the full string wasn't recognized. Might be due to the underscore (ChirAllgThrx_aa)
                     case (strpos($row['TITEL'], "ChirAllg") !== false);
                         echo "OP-Ost 01";
                         break;
@@ -355,7 +351,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                     $hours = floor((float)($row['SALDO'] / 60 / 60));
                     $minutes = (int)($row['SALDO'] / 60) % 60;
                     $minutes = abs($minutes);
-// Pad the minutes with leading zeros - looks better
+                    // Pad the minutes with leading zeros - looks better
                     $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
                     $result = $hours . ":" . $minutes . " ";
                     if ($row['SALDO'] > 0) {
@@ -391,7 +387,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
         }
         oci_bind_by_name($stmt, ':datum', $datum);
 
-        // Execute the query
         if (oci_execute($stmt)) {
             echo "
 <div id='tbl-flex'>
@@ -402,71 +397,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <thead class='thead-dark'>";
             echo "<tr><th scope='col'>Zeit</th><th scope='col'>Name</th><th scope='col'>Station/Dienst</th>
 ";
-//check if user is loggedIn, then display Overtime
             if ($_SESSION["loggedin"] && $permission < 3) {
                 echo "<th>Überstunden</th>";
             }
             "
 </tr>";
 
-// Fetch the results
             while ($row = oci_fetch_array($stmt, OCI_ASSOC+OCI_RETURN_NULLS)) {
-                if (strpos($row["TITEL"], "OA") !== false || strpos($row["TITEL"], "PN 22:00-07:00") !== false){
-                    echo "<tr class='table-secondary OA' >";
-                } else {
-                    echo "<tr class='text-end'>";
-                }
-                if ($row["DIENSTPOSITION"] == "L" || $row["DIENSTPOSITION"] == "R") {
-                    echo "<tr class='table-secondary'>";
-                }
-                if($row["DIENSTPOSITION"] == "L") {
-                    echo "<td><img src='assets/L.png' alt='Frühdienst' width='50' height='50'></td>";
-                }
-                else
-                    if($row["DIENSTPOSITION"] == "R") {
-                        echo "<td><img src='assets/R.png' alt='Frühdienst' width='50' height='50'></td>";
-                    }
-                    else {
-                        echo "<td> </td>";
-                    }
-                $contactInfo = "";
-                if(!$row["TEL_INTERN"] && !$row["TEL_PRIVAT"] && !$row["TEL_SONST"] && !$row["PAGER"]) {
-                    $contactInfo .= " | keine Telefonnummer hinterlegt";
-                }
-
-
-                if (!$row["TEL_INTERN"] == null) {
-                    $blurredNumber = substr($row['TEL_INTERN'], 0, 5) . str_repeat('*', strlen($row['TEL_INTERN']) - 5);
-                    $contactInfo .= " |I " . $blurredNumber;
-                }
-                if (!$row["TEL_PRIVAT"] == null) {
-                    $blurredNumber = substr($row['TEL_PRIVAT'], 0, 5) . str_repeat('*', strlen($row['TEL_PRIVAT']) - 5);
-                    $contactInfo .= " |P " . $blurredNumber;
-                }
-                if (!$row["TEL_SONST"] == null) {
-                    $blurredNumber = substr($row['TEL_SONST'], 0, 5) . str_repeat('*', strlen($row['TEL_SONST']) - 5);
-                    $contactInfo .= " |S " . $blurredNumber;
-                }
-                if (!$row["PAGER"] == null) {
-                    $blurredNumber = substr($row['PAGER'], 0, 5) . str_repeat('*', strlen($row['PAGER']) - 5);
-                    $contactInfo .= " |P " . $blurredNumber;
-                }
-
-//Hover Function
-                echo "
-<td>
-<div class='CustomHover'>
-<h3>
-" . $row['KUERZEL'] . " | " . $row['VORNAME'] . " " . $row['NACHNAME'] . "
-</h3>
-
- 
-<div class='focus-content'>
-" . $contactInfo . "
-</div>
-</div>
-</td>";
-                echo "<td>";
+                $contactInfo = getStr($row);
                 switch ($row['TITEL']) {
                     case "Planung OP_Koord":
                         echo "P0-PROGRAMM";
@@ -480,7 +418,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         break;
                     case "Weisse Zone":
                     case '"Line-Dienst"':
-                        echo "Vf[V]"; //Temp
+                        echo "Vf[V]";
                         break;
                     case "C_ChirAllg Thrx aa":
                         echo "Thorax";
@@ -516,7 +454,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo "Pn_OA";
                         break;
                     case "H2 07.00 - 07.00":
-                    case "H2Pras_u_Pikett":         //sometimes H2 shows up twice, try to correct
+                    case "H2Pras_u_Pikett":
                         echo "H2";
                         break;
                     case "WE_Nachtdienst_OA":
@@ -555,7 +493,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                     $hours = floor((float)($row['SALDO'] / 60 / 60));
                     $minutes = (int)($row['SALDO'] / 60) % 60;
                     $minutes = abs($minutes);
-                    $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT); // Pad the minutes with leading zeros
+                    $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
                     $result = $hours . ":" . $minutes . " ";
                     if ($row['SALDO'] > 0) {
                         echo "<p style='color: green'>" . $result;
@@ -575,9 +513,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
         }
         $dayOfWeek = date('w', strtotime($datum));
 
-        // Check if it's Saturday or Sunday
+        // Check if it's Saturday or Sunday, then don't display the "Weisse Zone" Table
         if ($dayOfWeek != 0 && $dayOfWeek != 6) {
-        // It's a weekday, execute the code
+
 
         // Weisse Zone
         $sql = "SELECT MA.NACHNAME, MA.VORNAME, MA.KUERZEL, D.TITEL, MA.TEL_INTERN, MA.TEL_PRIVAT, MA.TEL_SONST, MA.PAGER, PL.DIENSTPOSITION, D.PA_CODE, PL.KNOTEN_ID, FnGLAZSaldo(MA.ID, TO_DATE(:datum, 'YYYY-MM-DD')) AS SALDO
@@ -590,7 +528,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
         }
         oci_bind_by_name($stmt, ':datum', $datum);
 
-        // Execute the query
         if (oci_execute($stmt)) {
             echo "
 <div id='tbl-flex'>
@@ -601,11 +538,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
     <thead class='thead-dark'>";
             echo "<tr><th scope='col'>Zeit</th><th scope='col'>Name</th><th scope='col'>Station/Dienst</th>";
 
-//check if user is logged in, then display Overtime
             if ($_SESSION["loggedin"] && $permission < 3) {
                 echo "<th>Überstunden</th>";
             }
-// Fetch the results
             while ($row = oci_fetch_array($stmt, OCI_ASSOC + OCI_RETURN_NULLS)) {
 
                 $contactInfo = getStr($row);
@@ -628,14 +563,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['Tagesinformation']) &&
                         echo $row['TITEL'];
                 }
                 echo "</td>";
-                //check if user is loggedIn, then display Overtime
                 if ($_SESSION["loggedin"] && $permission < 3) {
 
                     echo "<td class='text-end'>";
                     $hours = floor((float)($row['SALDO'] / 60 / 60));
                     $minutes = (int)($row['SALDO'] / 60) % 60;
                     $minutes = abs($minutes);
-                    $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT); // Pad the minutes with leading zeros
+                    // Pad the minutes with leading zeros
+                    $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
                     $result = $hours . ":" . $minutes . " ";
                     if ($row['SALDO'] > 0) {
                         echo "<p style='color: green'>" . $result;

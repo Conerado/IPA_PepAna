@@ -18,7 +18,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Username exists, proceed with password update
         // Check if the new password and confirm password match
         if ($password === $confirm_password) {
-            // Check if the password meets the criteria
             if (strlen($password) >= 8 && preg_match('/[A-Za-z]/', $password)) {
                 // Hash the new password
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -41,7 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error_message = "Passwords do not match";
         }
     } else {
-        // Username does not exist
         $error_message = "Username does not exist";
     }
 }

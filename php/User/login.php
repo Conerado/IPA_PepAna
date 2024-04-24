@@ -1,11 +1,9 @@
 <?php
 session_start();
 global $mySqlConn;
-//include (config/dbConfig.php);
 
 
-
-//Connect to dbConfig.php
+//include dbConfig.php
 require_once "../../config/dbConfig.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
@@ -33,7 +31,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['permissionLevel'] = $row['permissionLevel'];
             $_SESSION['loggedin'] = true;
 
-            // Redirect to a logged-in page or perform other actions
             header("Location: ../../index.php");
             exit;
         } else {

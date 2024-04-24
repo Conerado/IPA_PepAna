@@ -29,7 +29,6 @@ if ($_SESSION['permissionLevel'] != 1) {
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_POST['deleteUser']) && isset($_POST['userID'])) {
             $userID = $_POST['userID'];
-            // Delete user
             $sql = "DELETE FROM users WHERE id = $userID";
             if ($mySqlConn->query($sql) === TRUE) {
                 $_SESSION['success_message'] = "Benutzer wurde gelöscht";
